@@ -158,11 +158,11 @@ def tick():
 
 col1, col2 = st.columns([2, 1])
 with col1:
-    genre_input = st.text_input("Film/TV genre", value="horror").strip().lower()
+    genre_input = st.text_input("Film/TV genre or enter the topic you want to research about", value="horror").strip().lower()
 with col2:
     n_posts = st.slider("Threads", 10, 200, 50, step=10)
 
-subreddit = st.text_input("Subreddit", value=GENRE_DEFAULT_SUB.get(genre_input, "movies")).strip()
+subreddit = st.text_input("Subreddit", value="horror").strip()
 
 st.markdown("#### Research questions (1‑5, one per line)")
 qs_text = st.text_area("Questions", "What tropes feel over‑used?\nWhat excites this audience?", label_visibility="collapsed")
