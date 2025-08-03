@@ -88,7 +88,7 @@ def fetch_threads(sub: str, limit: int, timer_cb: Callable[[], None]) -> List[Di
         timer_cb()
     return threads
 
-def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slot, timer_cb: Callable[[], None], model: str = "o3", batch: int = 6) -> None:
+def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slot, timer_cb: Callable[[], None], model: str = "gpt4o", batch: int = 6) -> None:
     total = len(threads)
     done = 0
     for i in range(0, total, batch):
@@ -142,7 +142,7 @@ def generate_report(genre: str, threads: List[Dict], questions: List[str], timer
         {"role": "assistant", "content": f"CORPUS ({len(threads)} threads):\n{corpus}"},
         {"role": "user", "content": q_block},
     ]
-    resp = openai.chat.completions.create(model="o3", messages=msgs)
+    resp = openai.chat.completions.create(model="gpt-4o", messages=msgs)
     timer_cb()
     return resp.choices[0].message.content
 
