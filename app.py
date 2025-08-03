@@ -88,7 +88,7 @@ def fetch_threads(sub: str, limit: int, timer_cb: Callable[[], None]) -> List[Di
         timer_cb()
     return threads
 
-def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slot, timer_cb: Callable[[], None], model: str = "gpt4o", batch: int = 6) -> None:
+def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slot, timer_cb: Callable[[], None], model: str = "gpt-4o", batch: int = 6) -> None:
     total = len(threads)
     done = 0
     for i in range(0, total, batch):
