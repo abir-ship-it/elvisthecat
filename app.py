@@ -186,10 +186,10 @@ if st.button("Run research 🚀"):
     progress = st.progress(0.0)
     status = st.empty()
     sample_preview = st.empty()
-    with st.spinner("📝 Summarising…"):
+    with st.spinner("📝 Summarizing…"):
         summarise_threads(threads, progress, status, sample_preview, tick)
 
-    st.success(f"Summarised {len(threads)} threads from r/{subreddit}.")
+    st.success(f"Summarized {len(threads)} threads from r/{subreddit}.")
     with st.expander("🔍 Gists & insights"):
         st.json([{"title": t["title"], **t["summary"], "url": t["url"]} for t in threads])
 
