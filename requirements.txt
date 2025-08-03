@@ -1,0 +1,6 @@
+streamlit>=1.29.0       # or latest
+praw>=7.8.0
+openai>=1.45.0          # keep, or bump to 1.46+ and drop the httpx pin
+python-dotenv>=1.0.1
+httpx==0.27.0           # compatibility pin (remove if you upgrade openai)
+fpdf
