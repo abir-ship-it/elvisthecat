@@ -112,7 +112,11 @@ def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slo
             {"role": "user", "content": json.dumps(payload)},
         ]
         resp = openai.chat.completions.create(model=model, messages=msgs)
-        summaries = json.loads(resp.choices[0].message.content)
+        summaries = {}
+        try:
+            summaries = json.loads(resp.choices[0].message.content)
+        except:
+            print("Json exception")
         for t in chunk:
             t["summary"] = summaries.get(t["id"], {})
         done += len(chunk)
