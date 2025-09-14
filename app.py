@@ -133,12 +133,12 @@ def generate_report(genre: str, threads: List[Dict], questions: List[str], timer
     q_block = "\n".join(f"Q{i+1}. {q}" for i, q in enumerate(questions))
 
     prompt = (
-        "You are a senior story analyst assisting film *writers* and *producers* who are exploring the "
-        f"**{genre.title()}** genre. You have mined Reddit audience discussions. "
-        "First, give a one‑paragraph snapshot of overall audience sentiment for this genre. "
+        "You are a senior analyst and researcher assisting business executives who are exploring the "
+        f"**{genre.title()}** topic. You have mined Reddit community and audience discussions. "
+        "First, give a one‑paragraph snapshot of overall audience sentiment for this topic. "
         "Then, answer each research question in its own subsection (≤2 paragraphs each), "
         "adding citations in [Title](URL) form right after every key evidence point. "
-        "Finish with a bold **list of ACTIONABLE INSIGHTS** lists 3 points for script-story writers (what to emphasise / avoid in a script), each with a citation, 3 points for movie producers/ marketers / distributors and 3 points for directors."
+        "Finish with a bold **list of ACTIONABLE INSIGHTS** lists 3 points for business executives (what to emphasise / avoid in a script), each with a citation."
     )
 
     msgs = [
