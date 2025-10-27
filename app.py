@@ -1,7 +1,7 @@
 # deep_research_reddit.py
 # ─────────────────────────────────────────────────────────────────────────────
 # Streamlit assistant for genre‑based Reddit deep research tailored for
-# screen‑writers and producers.
+# screen‑writers and producers. /rs/blob/main/app.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 import os, json, time, random
@@ -115,7 +115,7 @@ def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slo
         summaries = {}
         try:
             summaries = json.loads(resp.choices[0].message.content)
-        except:
+        except Exception:
             print("Json exception")
         for t in chunk:
             t["summary"] = summaries.get(t["id"], {})
@@ -125,24 +125,17 @@ def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slo
         time.sleep(0.5)
     status_slot.markdown("**Summarising complete!**")
 
-def generate_report(genre: str, threads: List[Dict], questions: List[str], timer_cb: Callable[[], None]) -> str:
+# UPDATED: generate_report now accepts a system_prompt argument
+
+def generate_report(genre: str, threads: List[Dict], questions: List[str], timer_cb: Callable[[], None], system_prompt: str) -> str:
     corpus = "\n\n".join(
         f"{t['title']} – {t['summary'].get('gist','')} [URL]({t['url']})" for t in threads
     )[:15000]
 
     q_block = "\n".join(f"Q{i+1}. {q}" for i, q in enumerate(questions))
 
-    prompt = (
-        "You are a senior analyst and researcher assisting business executives who are exploring the "
-        f"**{genre.title()}** topic. You have mined Reddit community and audience discussions. "
-        "First, give a one‑paragraph snapshot of overall audience sentiment for this topic. "
-        "Then, answer each research question in its own subsection (≤2 paragraphs each), "
-        "adding citations in [Title](URL) form right after every key evidence point. "
-        "Finish with a bold **list of ACTIONABLE INSIGHTS** lists 3 points for business executives (what to emphasise / avoid in a script), each with a citation."
-    )
-
     msgs = [
-        {"role": "system", "content": prompt},
+        {"role": "system", "content": system_prompt},
         {"role": "assistant", "content": f"CORPUS ({len(threads)} threads):\n{corpus}"},
         {"role": "user", "content": q_block},
     ]
@@ -155,6 +148,7 @@ st.title("generalized reddit data extractor & analytics")
 
 ticker = st.sidebar.empty()
 start_time = time.time()
+
 def tick():
     elapsed = time.time() - start_time
     mins, secs = divmod(int(elapsed), 60)
@@ -172,6 +166,22 @@ st.markdown("#### Research questions (1‑5, one per line)")
 qs_text = st.text_area("Questions", "What tropes feel over‑used?\nWhat excites this audience?", label_visibility="collapsed")
 questions = [q.strip() for q in qs_text.splitlines() if q.strip()][:5]
 
+# NEW: Custom prompt override UI + fallback to original default when empty
+st.markdown("#### Custom report prompt (override)")
+DEFAULT_SYSTEM_PROMPT = (
+    "You are a senior analyst and researcher assisting business executives who are exploring the "
+    f"**{genre_input.title()}** topic. You have mined Reddit community and audience discussions. "
+    "First, give a one‑paragraph snapshot of overall audience sentiment for this topic. "
+    "Then, answer each research question in its own subsection (≤2 paragraphs each), "
+    "adding citations in [Title](URL) form right after every key evidence point. "
+    "Finish with a bold **list of ACTIONABLE INSIGHTS** lists 3 points for business executives (what to emphasise / avoid in a script), each with a citation."
+)
+custom_prompt_text = st.text_area(
+    "Write your own instructions for how to craft the final report (leave blank to use the default).",
+    value="",
+    height=140,
+)
+
 if st.button("Run research 🚀"):
     if not subreddit:
         st.error("Please specify a subreddit.")
@@ -181,7 +191,10 @@ if st.button("Run research 🚀"):
         st.stop()
 
     with st.spinner("⛏️ Fetching threads + comments…"):
-        threads = fetch_threads(subreddit, n_posts, tick)
+        # Save raw payload for download (pre-summaries)
+        raw_threads = fetch_threads(subreddit, n_posts, tick)
+        # Work on a copy for summarization/reporting
+        threads = json.loads(json.dumps(raw_threads))
 
     progress = st.progress(0.0)
     status = st.empty()
@@ -191,12 +204,35 @@ if st.button("Run research 🚀"):
 
     st.success(f"Summarized {len(threads)} threads from r/{subreddit}.")
     with st.expander("🔍 Gists & insights"):
-        st.json([{"title": t["title"], **t["summary"], "url": t["url"]} for t in threads])
+        st.json([{"title": t["title"], **t.get("summary", {}), "url": t["url"]} for t in threads])
+
+    # Resolve final system prompt now
+    if custom_prompt_text.strip():
+        system_prompt = f"You are doing research on: **{genre_input.title()}** topic. " + custom_prompt_text.strip()
+    else:
+        system_prompt = DEFAULT_SYSTEM_PROMPT
 
     with st.spinner("🧠 Crafting final report…"):
-        report_md = generate_report(genre_input, threads, questions, tick)
+        report_md = generate_report(genre_input, threads, questions, tick, system_prompt)
 
     st.markdown("## 📊 Audience‑Driven Report")
     st.markdown(report_md)
+
+    # Downloads should appear ONLY after the report is generated
+    st.markdown("---")
+    st.subheader("⬇️ Downloads")
+    reddit_json_str = json.dumps(raw_threads, ensure_ascii=False, indent=2)
+    st.download_button(
+        label="Download Reddit response (JSON)",
+        data=reddit_json_str,
+        file_name=f"reddit_{subreddit}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        mime="application/json",
+    )
+    st.download_button(
+        label="Download final report (.md)",
+        data=report_md,
+        file_name=f"report_{genre_input}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+        mime="text/markdown",
+    )
 
     tick()
