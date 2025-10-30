@@ -141,6 +141,7 @@ def generate_report(genre: str, threads: List[Dict], questions: List[str], user_
             "Finish with a bold **list of ACTIONABLE INSIGHTS** lists 3 points for business executives (what to emphasise / avoid in a script), each with a citation."
         )
     else:
+        ## This prompt is used if the user overrides in the Streamlit UI
         prompt = f"You are doing research on: **{genre.title()}** topic. " + user_prompt.strip()
 
     msgs = [
@@ -226,6 +227,7 @@ if "report_md" in st.session_state and "threads" in st.session_state:
     st.markdown("## 📊 Audience-Driven Report")
     st.markdown(st.session_state["report_md"])
 
+    ## Downloading a zip file instead of two files.
     # Build a ZIP containing both files for a single-button download
     ts = datetime.now().strftime('%Y%m%d_%H%M%S')
     json_name = f"reddit_{st.session_state['subreddit_val']}_{ts}.json"
