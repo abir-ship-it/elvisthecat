@@ -39,7 +39,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── ENV / KEYS ───────────────────────────────────────────────────────────────
+# ── ENV / KEYS 4 keys, fourth placeholder───────────────────────────────────────────────────────
 load_dotenv()
 openai.api_key        = os.getenv("OPENAI_API_KEY", "")
 REDDIT_CLIENT_ID      = os.getenv("REDDIT_CLIENT_ID", "")
