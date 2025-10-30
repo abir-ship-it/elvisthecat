@@ -71,6 +71,7 @@ GENRE_DEFAULT_SUB = {
 
 def fetch_threads(sub: str, limit: int, timer_cb: Callable[[], None]) -> List[Dict]:
     threads = []
+    ## The limit variable is populated by the slider using "st.slider" in line : 170 ish
     for post in reddit.subreddit(sub).new(limit=limit):
         post.comments.replace_more(limit=None)
         comments = " ".join(c.body for c in post.comments.list())
@@ -166,7 +167,7 @@ col1, col2 = st.columns([2, 1])
 with col1:
     genre_input = st.text_input(" enter the topic you want to research about", value="horror").strip().lower()
 with col2:
-    n_posts = st.slider("Threads", 10, 200, 50, step=10)
+    n_posts = st.slider("Threads", 10, 200, 50, step=10) ## This information is used to decide the number of reddit threads to fetch
 
 subreddit = st.text_input("Subreddit", value="horror").strip()
 
