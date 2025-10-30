@@ -164,7 +164,7 @@ def tick():
 
 col1, col2 = st.columns([2, 1])
 with col1:
-    genre_input = st.text_input("Film/TV genre or enter the topic you want to research about", value="horror").strip().lower()
+    genre_input = st.text_input(" enter the topic you want to research about", value="horror").strip().lower()
 with col2:
     n_posts = st.slider("Threads", 10, 200, 50, step=10)
 
