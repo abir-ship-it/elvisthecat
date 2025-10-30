@@ -178,12 +178,12 @@ questions = [q.strip() for q in qs_text.splitlines() if q.strip()][:5]
 
 # Empty prompt override (no default text shown)
 st.markdown("#### Custom report prompt (override)")
-custom_prompt= " "You are a senior analyst and researcher assisting business executives who are exploring the \n"+ "You have mined Reddit community and audience discussions. \n" + "First, give a one-paragraph snapshot of overall audience sentiment for this topic. \n" + "Then, answer each research question in its own subsection (≤2 paragraphs each),\n "
+custom_prompt= "You are a senior analyst and researcher assisting business executives who are exploring the \n"+ "You have mined Reddit community and audience discussions. \n" + "First, give a one-paragraph snapshot of overall audience sentiment for this topic. \n" + "Then, answer each research question in its own subsection (≤2 paragraphs each),\n "
 custom_prompt +=  "adding citations in [Title](URL) form right after every key evidence point. \n"
 custom_prompt += "Finish with a bold **list of ACTIONABLE INSIGHTS** lists 3 points for business executives (what to emphasise / avoid in a script), each with a citation."
 user_prompt_input = st.text_area(
     "Write your own instructions for how to craft the final report.",
-    value="",
+    value= custom_prompt,
     height=140,
 )
 
