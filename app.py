@@ -58,6 +58,7 @@ reddit = praw.Reddit(
 )
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+### This is default. This can be overridden on the streamlit app.
 GENRE_DEFAULT_SUB = {
     "horror": "horror",
     "sci-fi": "scifi",
@@ -69,6 +70,7 @@ GENRE_DEFAULT_SUB = {
     "thriller": "Thrillers",
 }
 
+## Fetches the threads from Sub Reddit as decided by the slider and the string
 def fetch_threads(sub: str, limit: int, timer_cb: Callable[[], None]) -> List[Dict]:
     threads = []
     ## The limit variable is populated by the slider using "st.slider" in line : 170 ish
@@ -85,6 +87,10 @@ def fetch_threads(sub: str, limit: int, timer_cb: Callable[[], None]) -> List[Di
         })
         timer_cb()
     return threads
+
+## Each of these the threads fetched from Reddit might be in a weird form. We need to summarize them so that i can be fit into the final prompt
+## in the future, iff OpenAI comes up with a model with unlimited context , we may not need to summarise the thread
+## also, its a matter of cost. If we use O3 for everything, cost will be a concern.
 
 def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slot, timer_cb: Callable[[], None], model: str = "gpt-4o", batch: int = 6) -> None:
     total = len(threads)
@@ -109,7 +115,7 @@ def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slo
             },
             {"role": "user", "content": json.dumps(payload)},
         ]
-        resp = openai.chat.completions.create(model=model, messages=msgs)
+        resp = openai.chat.completions.create(model=model, messages=msgs) ### If openAI is deprecating 4o, you have the change the model here.
         summaries = {}
         try:
             summaries = json.loads(resp.choices[0].message.content)
@@ -123,6 +129,11 @@ def summarise_threads(threads: List[Dict], progress_bar, status_slot, sample_slo
         time.sleep(0.5)
     status_slot.markdown("**Summarising complete!**")
 
+## Once you have all the summaries, the questions, this is the final prompt that generates the report.
+## Input are the topic, summarized threads, questions.
+## There are two options, 1) Either user can use the default prompt in the box Custom report prompt (override)
+##  or can override it from the app and it takes effect in line :156
+## 
 def generate_report(genre: str, threads: List[Dict], questions: List[str], user_prompt: str, timer_cb: Callable[[], None]) -> str:
     corpus = "\n\n".join(
         f"{t['title']} – {t['summary'].get('gist','')} [URL]({t['url']})" for t in threads
@@ -149,16 +160,20 @@ def generate_report(genre: str, threads: List[Dict], questions: List[str], user_
         {"role": "assistant", "content": f"CORPUS ({len(threads)} threads):\n{corpus}"},
         {"role": "user", "content": q_block},
     ]
+    ## Make the call to the Open AI chat completions endpoint.
+    ## if they deprecate change line :165
     resp = openai.chat.completions.create(model="gpt-4o", messages=msgs)
     timer_cb()
     return resp.choices[0].message.content
 
 # ── UI ──────────────────────────────────────────────────────────────────────
+## This is where streamlit magic comes from. St.title creates a title
 st.title("generalized reddit data extractor & analytics")
 
 ticker = st.sidebar.empty()
 start_time = time.time()
 
+## clock you see on the left hand side
 def tick():
     elapsed = time.time() - start_time
     mins, secs = divmod(int(elapsed), 60)
@@ -188,8 +203,10 @@ user_prompt_input = st.text_area(
 )
 
 # ── Run pipeline and persist to session state ───────────────────────────────
+## Next line creates a button
 run_clicked = st.button("Run research 🚀")
 
+## Below we do a series of validations.
 if run_clicked:
     if not subreddit:
         st.error("Please specify a subreddit.")
@@ -197,6 +214,8 @@ if run_clicked:
     if not questions:
         st.error("Enter at least one research question.")
         st.stop()
+
+    ## Standard error validation for missing subreddits, questions boxes
 
     with st.spinner("⛏️ Fetching threads + comments…"):
         raw_threads = fetch_threads(subreddit, n_posts, tick)
@@ -211,6 +230,9 @@ if run_clicked:
     with st.spinner("🧠 Crafting final report…"):
         report_md = generate_report(genre_input, threads, questions, user_prompt_input, tick)
 
+    ## streamlit user interface ends here, below this is code to download the report.
+    ## So once, the report is generated, Streamlit will lose context and memory, so, we are asking streamlit to preserve the content
+    ## And if the user wants to download, the raw json from reddit + final report can be zipped and downloaded. 
     # Persist results to session so a rerun (e.g., after download) does NOT lose state
     st.session_state["raw_threads"] = raw_threads
     st.session_state["threads"] = threads
@@ -238,6 +260,7 @@ if "report_md" in st.session_state and "threads" in st.session_state:
 
     reddit_json_str = json.dumps(st.session_state["raw_threads"], ensure_ascii=False, indent=2)
 
+    ## Below is the code to combine both (final report + raw reddit json) into one .zip file 
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr(json_name, reddit_json_str)
