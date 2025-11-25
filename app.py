@@ -169,7 +169,7 @@ def generate_report(genre: str, threads: List[Dict], questions: List[str], user_
 
 # ── UI ──────────────────────────────────────────────────────────────────────
 ## This is where streamlit magic comes from. St.title creates a title
-st.title("123generalized reddit data extractor & analytics")
+st.title("Generalized Reddit Extractor & Analytics")
 
 ticker = st.sidebar.empty()
 start_time = time.time()
