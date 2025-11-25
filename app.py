@@ -22,6 +22,7 @@ if not st.session_state["authenticated"]:
         if pwd == "abir":
             st.session_state["authenticated"] = True
             st.rerun()
+            st.stop()
         else:
             st.error("Incorrect password.")
     st.stop()
