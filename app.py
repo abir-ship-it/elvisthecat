@@ -15,6 +15,8 @@ st.set_page_config(page_title="Reddit Research", layout="centered")
 
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
+    
+st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
     pwd = st.text_input("Password (just press enter)", type="password")
